@@ -17,8 +17,9 @@ import           FRP.Yampa
 import qualified Graphics.HGL  as HGL
 #else
 import GHC.IO ( unsafePerformIO )
+import WasmImports
 #endif
-import           System.Random
+import           System.Random (mkStdGen)
 
 -- Internal imports
 -- Temporary, just to make sure all modules compile.
@@ -38,15 +39,17 @@ type Score = Int
 #if WASM_BUILD
 actuate :: ReactHandle WinInput (Score, [ObsObjState]) -> Bool -> (Score, [ObsObjState]) -> IO Bool
 actuate _ _ (score, ooss) = do
+    clearCanvas 30 30 120
     renderScore score
-    renderObjects ooss
-    landscape
-    return False
+    -- landscape
+    -- renderObjects ooss
+    -- fillTextHelper ("Mouse position y: "++show ((floor $ mousePositionY out) :: Integer)) 20 10 300
+    return (score /= 0)
 
 gameReactHandle :: ReactHandle WinInput (Score, [ObsObjState])
 {-# NOINLINE gameReactHandle #-}
 gameReactHandle = unsafePerformIO $ do
-    g <- newStdGen
+    let g = mkStdGen 123
     reactInit
         (pure $ WinInput 0.0 0.0 False)
         actuate
@@ -65,7 +68,7 @@ main = return ()
 
 main :: IO ()
 main = do
-    g <- newStdGen
+    let g = mkStdGen 123
     animate 20 "S P A C E   I N V A D E R S" worldSizeX worldSizeY
                -- Render
                (\(score, ooss) -> renderScore score
@@ -243,6 +246,8 @@ renderScore score =
         gp = position2ToGPoint (Point2 worldXMin worldYMax)
 #else
 renderScore :: Score -> IO ()
-renderScore score =
-    pure () -- TODO
+renderScore score = do
+    setFontHelper "10px serif"
+    fillStyle 180 230 200
+    fillTextHelper ("Score: "++show score) 10 15 300
 #endif

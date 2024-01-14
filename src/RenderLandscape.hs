@@ -40,7 +40,9 @@ landscape =
         ]
 #else
 landscape :: IO ()
-landscape = pure () -- TODO
+landscape =
+  putStrLn "asdf"
+  -- return () -- TODO
 #endif
 
 -- Points defining the distant mountain chain.

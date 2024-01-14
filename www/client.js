@@ -123,18 +123,18 @@ async function run() {
     // byte arrays to and from a WASI reactor
     // Followed this example:
     // https://github.com/willmcpherson2/ghc-wasm-experiment/tree/main
-    const inputData = "Test String!"
-    const inputLen = Buffer.byteLength(inputData);
-    const inputPtr = inst.exports.malloc(inputLen);
-    const inputArr = new Uint8Array(memory.buffer, inputPtr, inputLen);
-    encoder.encodeInto(inputData, inputArr);
+    // const inputData = "Test String!"
+    // const inputLen = Buffer.byteLength(inputData);
+    // const inputPtr = inst.exports.malloc(inputLen);
+    // const inputArr = new Uint8Array(memory.buffer, inputPtr, inputLen);
+    // encoder.encodeInto(inputData, inputArr);
 
-    const outputPtr = inst.exports.reverseCharArray(inputPtr, inputLen);
-    const outputArr = new Uint8Array(memory.buffer, outputPtr, inputLen);
-    const output = decoder.decode(outputArr);
-    console.log(`'${inputData}' reversed is '${output}'`)
-    inst.exports.free(inputPtr);
-    inst.exports.free(outputPtr);
+    // const outputPtr = inst.exports.reverseCharArray(inputPtr, inputLen);
+    // const outputArr = new Uint8Array(memory.buffer, outputPtr, inputLen);
+    // const output = decoder.decode(outputArr);
+    // console.log(`'${inputData}' reversed is '${output}'`)
+    // inst.exports.free(inputPtr);
+    // inst.exports.free(outputPtr);
 
     var previousTimeStamp = null;
     function step(timeStamp) {
@@ -142,7 +142,7 @@ async function run() {
             previousTimeStamp = timeStamp;
         }
         const deltaTime = (timeStamp-previousTimeStamp)/1000;
-        inst.exports.runGameStep(mouseX, mouseY, deltaTime);
+        inst.exports.runGameStep(mouseX, mouseY, false, deltaTime);
         previousTimeStamp = timeStamp;
         window.requestAnimationFrame(step);
     }
