@@ -39,11 +39,10 @@ type Score = Int
 #if WASM_BUILD
 actuate :: ReactHandle WinInput (Score, [ObsObjState]) -> Bool -> (Score, [ObsObjState]) -> IO Bool
 actuate _ _ (score, ooss) = do
-    clearCanvas 30 30 120
+    clearCanvas 0 0 0
     renderScore score
-    -- landscape
-    -- renderObjects ooss
-    -- fillTextHelper ("Mouse position y: "++show ((floor $ mousePositionY out) :: Integer)) 20 10 300
+    landscape
+    renderObjects ooss
     return (score /= 0)
 
 gameReactHandle :: ReactHandle WinInput (Score, [ObsObjState])
@@ -247,7 +246,7 @@ renderScore score =
 #else
 renderScore :: Score -> IO ()
 renderScore score = do
-    setFontHelper "10px serif"
+    setFontHelper "20px serif"
     fillStyle 180 230 200
-    fillTextHelper ("Score: "++show score) 10 15 300
+    fillTextHelper ("Score: "++show score) 10 40 300
 #endif

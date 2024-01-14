@@ -16,6 +16,7 @@ import           Data.Point2  (Point2 (..))
 import qualified Graphics.HGL as HGL
 #else
 import qualified HGLSubstitutes as HGL
+import RenderObject
 #endif
 -- Internal imports
 import ColorBindings
@@ -40,9 +41,10 @@ landscape =
         ]
 #else
 landscape :: IO ()
-landscape =
-  putStrLn "asdf"
-  -- return () -- TODO
+landscape = do
+  polygon distantMountainColor (map gPointToPosition2 dmPoints)
+  polygon closeMountainColor (map gPointToPosition2 cmPoints)
+  polygon groundColor (map gPointToPosition2 groundPoints)
 #endif
 
 -- Points defining the distant mountain chain.

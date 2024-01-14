@@ -8,6 +8,7 @@ import Foreign (free)
 
 foreign import ccall "clearCanvas" clearCanvas :: Int -> Int -> Int -> IO ()
 foreign import ccall "fillStyle" fillStyle :: Int -> Int -> Int -> IO ()
+foreign import ccall "strokeStyle" strokeStyle :: Int -> Int -> Int -> IO ()
 foreign import ccall "fillRect" fillRect :: Double -> Double -> Double -> Double -> IO ()
 foreign import ccall "getCanvasWidth" getCanvasWidth :: IO Int
 foreign import ccall "getCanvasHeight" getCanvasHeight :: IO Int
@@ -24,6 +25,7 @@ foreign import ccall "closePath" closePath :: IO ()
 foreign import ccall "stroke" stroke :: IO ()
 foreign import ccall "moveTo" moveTo :: Double -> Double -> IO ()
 foreign import ccall "lineTo" lineTo :: Double -> Double -> IO ()
+foreign import ccall "setLineWidth" setLineWidth :: Double -> IO ()
 -- Helper function to avoid dealing with manual memory management
 fillTextHelper :: String -> Double -> Double -> Double -> IO ()
 fillTextHelper textStr x y maxWidth = do

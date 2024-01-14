@@ -20,4 +20,5 @@ void closePath();
 void stroke();
 void moveTo(double x, double y);
 void lineTo(double x, double y);
+void setLineWidth(double lineWidth);
 #endif

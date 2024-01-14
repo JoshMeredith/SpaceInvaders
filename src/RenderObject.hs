@@ -5,10 +5,16 @@
 -- Copyright   : (c) Yale University, 2003
 --
 -- Author: Henrik Nilsson
+#if !WASM_BUILD
 module RenderObject (
     renderObjects       -- :: [ObjObjState] -> HGL.Graphic
 ) where
-
+#else
+module RenderObject (
+    renderObjects       -- :: [ObjObjState] -> HGL.Graphic
+  , polygon
+) where
+#endif
 -- External imports
 import           Data.AffineSpace ((.+^), (.-^))
 import           Data.Array
@@ -17,6 +23,7 @@ import           Data.Vector2     (vector2, vector2Polar)
 import qualified Graphics.HGL     as HGL
 #else
 import WasmImports
+import HGLSubstitutes
 #endif
 -- Internal imports
 import ColorBindings
@@ -24,6 +31,7 @@ import Colors
 import Object
 import PhysicalDimensions
 import WorldGeometry
+import WasmImports (beginPath, setLineWidth)
 
 ------------------------------------------------------------------------------
 -- Object rendering
@@ -61,8 +69,25 @@ renderObject (OOSAlien {oosPos = p, oosHdng = h}) =
         v  = vector2Polar alienWingRadius (h + pi/2)
 #else
 renderObject :: ObsObjState -> IO ()
-renderObject (OOSGun {oosPos = p, oosAmLvl = l}) =
-    pure ()
+renderObject (OOSGun {oosPos = p, oosAmLvl = l}) = do
+    triangle gunColor p1 p2 p3
+    fillStyle 180 230 200
+    setFontHelper "20px serif"
+    fillTextHelper ("Ammo: "++show l) 10 60 300
+    where
+        p1 = p .+^ vector2 0 (gunHeight/2)
+        p2 = p .+^ vector2 (-(gunBase/2)) (-(gunHeight/2))
+        p3 = p .+^ vector2 (gunBase/2) (-(gunHeight/2))
+renderObject (OOSMissile {oosPos = p}) = circle missileColor p missileRadius
+renderObject (OOSAlien {oosPos = p, oosHdng = h}) = do
+    line alienWingColor p1 p2
+    (circle alienColor p alienRadius)
+    (circle alienDoorColor p3 (alienRadius/3))
+    where
+        p1 = p .+^ v
+        p2 = p .-^ v
+        p3 = p .+^ vector2Polar (alienRadius / 2) h
+        v  = vector2Polar alienWingRadius (h + pi/2)
 #endif
 
 #if !WASM_BUILD
@@ -77,8 +102,17 @@ line c p1 p2 =
         gp2 = position2ToGPoint p2
 #else
 line :: Color -> Position2 -> Position2 -> IO ()
-line c p1 p2 =
-    pure ()
+line c p1 p2 = do
+    let (RGB r g b) = colorTable ! c
+    setLineWidth 2.0
+    beginPath
+    strokeStyle r g b
+    moveTo (fromIntegral $ fst gp1) (fromIntegral $ snd gp1)
+    lineTo (fromIntegral $ fst gp2) (fromIntegral $ snd gp2)
+    stroke
+    where
+        gp1 = position2ToGPoint p1
+        gp2 = position2ToGPoint p2
 #endif
 
 #if !WASM_BUILD
@@ -94,7 +128,7 @@ triangle c p1 p2 p3 =
 #else
 triangle :: Color -> Position2 -> Position2 -> Position2 -> IO ()
 triangle c p1 p2 p3 =
-    pure ()
+    polygon c [p1, p2, p3]
 #endif
 
 #if !WASM_BUILD
@@ -111,7 +145,7 @@ rectangle c p1 p2 =
 #else
 rectangle :: Color -> Position2 -> Position2 -> IO ()
 rectangle c p1 p2 =
-    pure ()
+    pure () --TODO
 #endif
 
 #if !WASM_BUILD
@@ -126,8 +160,15 @@ circle c p r =
         gp22 = position2ToGPoint (p .+^ d)
 #else
 circle :: Color -> Position2 -> Length -> IO ()
-circle c p r =
-    pure ()
+circle c p diameter = do
+    let (RGB r g b) = colorTable ! c
+    fillStyle r g b
+    beginPath
+    arc posX posY (diameter/2) 0 (2*pi) False
+    fill
+    where
+        posX = (fromIntegral $ fst $ position2ToGPoint p)
+        posY = (fromIntegral $ snd $ position2ToGPoint p)
 #endif
 
 #if !WASM_BUILD
@@ -141,6 +182,24 @@ centeredText c p s =
 #else
 centeredText :: Color -> Position2 -> String -> IO ()
 centeredText c p s =
-    -- TODO: complete this
+    -- TODO
     pure ()
+#endif
+
+#if WASM_BUILD
+polygon :: Color -> [Position2] -> IO ()
+polygon c [] = do
+    let (RGB r g b) = colorTable ! c
+    fillStyle r g b
+polygon c pts@(p:pts') = do
+    let (RGB r g b) = colorTable ! c
+    fillStyle r g b
+    beginPath
+    moveTo (fromIntegral $ fst $ position2ToGPoint p) (fromIntegral $ snd $ position2ToGPoint p)
+    mapM_ (\pt -> do
+        lineTo (fromIntegral $ fst $ position2ToGPoint pt) (fromIntegral $ snd $ position2ToGPoint pt)
+        )
+        pts'
+    closePath
+    fill
 #endif

@@ -28,6 +28,15 @@ void fillStyle(int colR, int colG, int colB) {
   _fillStyle(colR, colG, colB);
 }
 
+void _strokeStyle(int, int, int) __attribute__((
+  __import_module__("env"),
+  __import_name__("strokeStyle")
+));
+
+void strokeStyle(int colR, int colG, int colB) {
+  _strokeStyle(colR, colG, colB);
+}
+
 void _fillRect(double, double, double, double) __attribute__((
   __import_module__("env"),
   __import_name__("fillRect")
@@ -129,4 +138,11 @@ void _lineTo(double, double) __attribute__((
 ));
 void lineTo(double x, double y) {
   _lineTo(x, y);
+}
+void _setLineWidth(double) __attribute__((
+  __import_module__("env"),
+  __import_name__("setLineWidth")
+));
+void setLineWidth(double lineWidth) {
+  _setLineWidth(lineWidth);
 }

@@ -54,6 +54,9 @@ const externalFunctions = {
     fillStyle : (colR, colG, colB) => {
         context.fillStyle=`rgb(${colR},${colG},${colB})`;
     },
+    strokeStyle : (colR, colG, colB) => {
+        context.strokeStyle=`rgb(${colR},${colG},${colB})`;
+    },
     fillRect : (x, y, width, height) => {
         context.fillRect(x, y, width, height);
     },
@@ -74,13 +77,16 @@ const externalFunctions = {
         const textArr = new Uint8Array(memory.buffer, textPtr, textLen);
         const text = decoder.decode(textArr);
         context.fillText(text, x, y, maxWidth);
+    },
+    setLineWidth : (lineWidth) => {
+        context.lineWidth = lineWidth;
     }
 }
 
 var pressed = {};
 var mouseX = 0;
 var mouseY = 0;
-
+var mouseDown = false;
 // Add event listeners on keys
 // TODO: add functions to send key statuses to Haskell
 document.addEventListener('keydown', (event) => {
@@ -100,6 +106,13 @@ document.addEventListener('mousemove', (event) => {
     var rect = canvas.getBoundingClientRect();
     mouseX = event.clientX - rect.left;
     mouseY = event.clientY - rect.top;
+})
+
+document.addEventListener('mousedown', (event) => {
+    mouseDown = true;
+})
+document.addEventListener('mouseup', (event) => {
+    mouseDown = false;
 })
 
 async function run() {
@@ -142,7 +155,7 @@ async function run() {
             previousTimeStamp = timeStamp;
         }
         const deltaTime = (timeStamp-previousTimeStamp)/1000;
-        inst.exports.runGameStep(mouseX, mouseY, false, deltaTime);
+        inst.exports.runGameStep(mouseX, mouseY, mouseDown, deltaTime);
         previousTimeStamp = timeStamp;
         window.requestAnimationFrame(step);
     }
