@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Parser
 -- Description : Parsing (mainly lexical analysis) of window event stream.
@@ -31,10 +32,11 @@ import           Data.AffineSpace (origin, (.-.))
 import           Data.Char        (isDigit, isSpace, ord)
 import           Data.Maybe       (isJust, isNothing)
 import           FRP.Yampa
+#if !WASM_BUILD
 import qualified Graphics.HGL     as HGL (Event (..))
-
+#endif
 -- Internal imports
-import Animate            (WinInput)
+import Animate            --(WinInput)
 import Command
 import PhysicalDimensions
 import WorldGeometry      (gPointToPosition2)
@@ -49,11 +51,18 @@ data GameInput = GameInput {
     giPDS    :: PDState
 }
 
-
+#if !WASM_BUILD
 parseWinInput :: SF WinInput GameInput
 parseWinInput = wiToCmd &&& wiToPDS
                 >>^ \((cmdStr, cmd), pds) ->
                         GameInput {giCmdStr = cmdStr, giCmd = cmd, giPDS = pds}
+#else
+parseWinInput :: SF WinInput GameInput
+parseWinInput = proc wi-> do
+    let pos = gPointToPosition2 (floor $ mouseX wi, floor $ mouseY wi)
+    let pdsLeft = if (lmb wi) then Just pos else Nothing
+    returnA -< GameInput "" NoEvent (initPDS { pdsPos = pos, pdsLeft = pdsLeft })
+#endif
 
 
 -- All event sources below are defined such that they will NOT occur at local
@@ -134,7 +143,7 @@ dragging = arr (giPDS >>> pdsDrag >>> isJust)
 
 -- Currently overkill, but being able to enter multi-character commands
 -- could possibly be useful.
-
+#if !WASM_BUILD
 wiToCmd :: SF WinInput (String, Event Command)
 wiToCmd = arr (mapFilterE selChar)
           >>> (accumBy scanChar (undefined,scanCmds) >>^ fmap fst >>^ splitE)
@@ -144,7 +153,7 @@ wiToCmd = arr (mapFilterE selChar)
 
         selChar (HGL.Char {HGL.char=c}) = Just c
         selChar _                       = Nothing
-
+#endif
 
 -- This ought to be redone. Kont should probably be called Tranition or
 -- somethinig.
@@ -317,7 +326,7 @@ initPDS = PDState {
               pdsDrag         = Nothing
           }
 
-
+#if !WASM_BUILD
 wiToPDS :: SF WinInput PDState
 wiToPDS = accumHoldBy nextPDS initPDS
 
@@ -362,7 +371,7 @@ nextPDS pds (HGL.MouseMove {HGL.pt = p}) =
         dsp = maybe (pdsDragStartPos pds) id md
         dv = maybe (pdsDragVec pds) (\dspos -> p' .-. dspos) md
 nextPDS pds _ = pds                             -- Ignore unknown events.
-
+#endif
 
 ------------------------------------------------------------------------------
 -- General utilities

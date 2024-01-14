@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Arrows #-}
 -- |
 -- Module      : Main
@@ -12,7 +13,11 @@ import           Data.Array
 import           Data.Maybe    (isJust)
 import           Data.Point2   (Point2 (..), point2Y)
 import           FRP.Yampa
+#if !WASM_BUILD
 import qualified Graphics.HGL  as HGL
+#else
+import GHC.IO ( unsafePerformIO )
+#endif
 import           System.Random
 
 -- Internal imports
@@ -30,6 +35,34 @@ import WorldGeometry
 
 type Score = Int
 
+#if WASM_BUILD
+actuate :: ReactHandle WinInput (Score, [ObsObjState]) -> Bool -> (Score, [ObsObjState]) -> IO Bool
+actuate _ _ (score, ooss) = do
+    renderScore score
+    renderObjects ooss
+    landscape
+    return False
+
+gameReactHandle :: ReactHandle WinInput (Score, [ObsObjState])
+{-# NOINLINE gameReactHandle #-}
+gameReactHandle = unsafePerformIO $ do
+    g <- newStdGen
+    reactInit
+        (pure $ WinInput 0.0 0.0 False)
+        actuate
+        (parseWinInput >>> restartingGame g)
+
+-- Exported function to perform single game step, function is called from JS
+foreign export ccall runGameStep :: Double -> Double -> Bool -> Double -> IO ()
+runGameStep :: Double -> Double -> Bool -> Double -> IO ()
+runGameStep x y pressed deltaTime = do
+  _ <- react gameReactHandle (deltaTime, Just (WinInput x y pressed))
+  return ()
+
+main :: IO ()
+main = return ()
+#else
+
 main :: IO ()
 main = do
     g <- newStdGen
@@ -43,7 +76,7 @@ main = do
                -- The actual game (see note about misnomer)
                (parseWinInput >>> restartingGame g)
 
-
+#endif
 -- Change name to "game"? What's now "game" would become "gameRound".
 -- What about "game'"?
 restartingGame :: RandomGen g => g -> SF GameInput (Int, [ObsObjState])
@@ -200,7 +233,7 @@ game g nAliens vydAlien score0 = proc gi -> do
                                      (ooSpawnReq oo))
                      | (k,oo) <- assocsIL oos ]
 
-
+#if !WASM_BUILD
 renderScore :: Score -> HGL.Graphic
 renderScore score =
     HGL.withTextColor (colorTable ! White) $
@@ -208,3 +241,8 @@ renderScore score =
     HGL.text gp (show score)
     where
         gp = position2ToGPoint (Point2 worldXMin worldYMax)
+#else
+renderScore :: Score -> IO ()
+renderScore score =
+    pure () -- TODO
+#endif

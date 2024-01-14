@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Colors
 -- Description : Colour definitions.
@@ -8,8 +9,11 @@ module Colors (Color(..), RGB, colorTable) where
 
 -- External imports
 import Data.Array
+#if !WASM_BUILD
 import Graphics.HGL (RGB(..))
-
+#else 
+import HGLSubstitutes (RGB(..))
+#endif
 
 ------------------------------------------------------------------------------
 -- Color definitions

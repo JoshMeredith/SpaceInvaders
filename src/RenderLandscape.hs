@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : RenderLandscape
 -- Description : Rendering of the fixed backdrop.
@@ -11,8 +12,11 @@ module RenderLandscape (
 -- External imports
 import           Data.Array
 import           Data.Point2  (Point2 (..))
+#if !WASM_BUILD
 import qualified Graphics.HGL as HGL
-
+#else
+import qualified HGLSubstitutes as HGL
+#endif
 -- Internal imports
 import ColorBindings
 import Colors
@@ -23,6 +27,7 @@ import WorldGeometry
 -- Landscape rendering
 ------------------------------------------------------------------------------
 
+#if !WASM_BUILD
 landscape :: HGL.Graphic
 landscape =
     HGL.mkBrush (colorTable ! distantMountainColor) $ \dmcBrush ->
@@ -33,7 +38,10 @@ landscape =
           HGL.withBrush cmcBrush    $ HGL.polygon cmPoints,
           HGL.withBrush dmcBrush    $ HGL.polygon dmPoints
         ]
-
+#else
+landscape :: IO ()
+landscape = pure () -- TODO
+#endif
 
 -- Points defining the distant mountain chain.
 dmPoints :: [HGL.Point]

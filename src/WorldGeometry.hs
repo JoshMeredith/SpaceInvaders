@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : WorldGeometry
 -- Description : Constants and functions defining the geometry of the world.
@@ -8,8 +9,11 @@ module WorldGeometry where
 
 -- External imports
 import           Data.Point2  (Point2 (..))
+#if !WASM_BUILD
 import qualified Graphics.HGL as HGL (Point)
-
+#else
+import qualified HGLSubstitutes as HGL (Point)
+#endif
 -- Internal imports
 import PhysicalDimensions
 

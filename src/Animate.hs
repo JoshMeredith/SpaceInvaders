@@ -1,10 +1,11 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- Module      : Animate
 -- Description : Animation of graphical signal functions.
 -- Copyright   : (c) Yale University, 2003
 --
 -- Author: Henrik Nilsson
-module Animate (WinInput, animate) where
+module Animate (WinInput (..), animate) where
 
 -- External imports
 import           Control.DeepSeq (NFData, force)
@@ -12,8 +13,9 @@ import           Control.Monad   (forM_, when)
 import           Data.IORef      (IORef, newIORef, readIORef, writeIORef)
 import           FRP.Yampa
 import           FRP.Yampa.Event
+#if !WASM_BUILD
 import qualified Graphics.HGL    as HGL
-
+#endif
 -- Internal imports
 import Diagnostics        (intErr)
 import PhysicalDimensions
@@ -39,8 +41,15 @@ import PhysicalDimensions
 -- is the current method, although it seems as if this method means that
 -- window close events often will be missed.
 
+#if !WASM_BUILD
 type WinInput = Event HGL.Event
-
+#else
+data WinInput = WinInput {
+    mouseX :: Double
+  , mouseY :: Double
+  , lmb :: Bool
+}
+#endif
 
 ------------------------------------------------------------------------------
 -- Animation
@@ -60,7 +69,7 @@ type WinInput = Event HGL.Event
 -- !!! function. Could one possibly somehow get data back into the signal
 -- !!! function by means of continuations? Or maybe the IOTask monad is the
 -- !!! way to go, with a special "reactimateIOTask".
-
+#if !WASM_BUILD
 animate :: (NFData a)
         => Frequency -> String -> Int -> Int
         -> (a -> HGL.Graphic)
@@ -208,3 +217,8 @@ updateWin render win (e, a) = when (force a `seq` isEvent e)
 -- | Repeat m until result satisfies the predicate p
 repeatUntil :: Monad m => m a -> (a -> Bool) -> m a
 m `repeatUntil` p = m >>= \x -> if not (p x) then repeatUntil m p else return x
+
+#else
+animate :: IO ()
+animate = pure () -- TODO
+#endif
