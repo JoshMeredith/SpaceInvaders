@@ -31,7 +31,6 @@ import Colors
 import Object
 import PhysicalDimensions
 import WorldGeometry
-import WasmImports (beginPath, setLineWidth)
 
 ------------------------------------------------------------------------------
 -- Object rendering
