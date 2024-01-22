@@ -42,7 +42,6 @@ executable spaceInvaders
 executable jsBuild
   hs-source-dirs:  src, src/WasmUtils
   ghc-options : 
-    jsbits/main.js
     -Wall
     -fno-warn-name-shadowing
     -Wall
@@ -54,6 +53,7 @@ executable jsBuild
   build-Depends: base >= 3 && < 5, array, random, Yampa >= 0.13.3
                , simple-affine-space >= 0.1 && < 0.3
                , deepseq >= 1.3.0 && < 1.6
+               , SpaceInvaders
   main-is: Main.hs
   default-extensions: Arrows
   Other-Modules:
@@ -74,7 +74,9 @@ executable jsBuild
     HGLSubstitutes
   default-language:
     Haskell2010
-  js-sources:       jsbits/main.js
+
+library
+  js-sources: jsbits/main.js
 
 executable wasmBuild
   hs-source-dirs:  src, src/WasmUtils

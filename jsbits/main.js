@@ -123,7 +123,7 @@ function h$setLineWidth(lineWidth) {
     context.lineWidth = lineWidth;
 }
 
-function run() {
+function runGame() {
     var previousTimeStamp = null;
 
     function step(timeStamp) {

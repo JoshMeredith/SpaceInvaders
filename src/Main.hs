@@ -43,7 +43,7 @@ import WorldGeometry
 
 type Score = Int
 
-#if WASM_BUILD
+#if (WASM_BUILD || JS_BUILD)
 actuate :: ReactHandle WinInput (Score, [ObsObjState]) -> Bool -> (Score, [ObsObjState]) -> IO Bool
 actuate _ _ (score, ooss) = do
     clearCanvas 0 0 0
@@ -61,41 +61,24 @@ gameReactHandle = unsafePerformIO $ do
         actuate
         (parseWinInput >>> restartingGame g)
 
--- Exported function to perform single game step, function is called from JS
-foreign export ccall runGameStep :: Double -> Double -> Bool -> Double -> IO ()
 runGameStep :: Double -> Double -> Bool -> Double -> IO ()
 runGameStep x y pressed deltaTime = do
   _ <- react gameReactHandle (deltaTime, Just (WinInput x y pressed))
   return ()
+
+#endif
+
+#if WASM_BUILD
+
+-- Exported function to perform single game step, function is called from JS
+foreign export ccall runGameStep :: Double -> Double -> Bool -> Double -> IO ()
 
 main :: IO ()
 main = return ()
 
 #elif JS_BUILD
 
-actuate :: ReactHandle WinInput (Score, [ObsObjState]) -> Bool -> (Score, [ObsObjState]) -> IO Bool
-actuate _ _ (score, ooss) = do
-    clearCanvas 0 0 0
-    renderScore score
-    landscape
-    renderObjects ooss
-    return (score /= 0)
-
-gameReactHandle :: ReactHandle WinInput (Score, [ObsObjState])
-{-# NOINLINE gameReactHandle #-}
-gameReactHandle = unsafePerformIO $ do
-    let g = mkStdGen 123
-    reactInit
-        (pure $ WinInput 0.0 0.0 False)
-        actuate
-        (parseWinInput >>> restartingGame g)
-
-runGameStep :: Double -> Double -> Bool -> Double -> IO ()
-runGameStep x y pressed deltaTime = do
-  _ <- react gameReactHandle (deltaTime, Just (WinInput x y pressed))
-  return ()
-
-foreign import javascript unsafe "run" run
+foreign import javascript unsafe "runGame" runGame
   :: IO ()
 
 foreign import javascript "unpackGameStepArgs" unpackGameStepArgs
@@ -115,7 +98,7 @@ main :: IO ()
 main = do
   rgs <- syncCallback1 ThrowWouldBlock runGameStep'
   setGameStep rgs
-  run
+  runGame
 
 #else
 
