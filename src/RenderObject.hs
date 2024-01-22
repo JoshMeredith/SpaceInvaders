@@ -5,7 +5,7 @@
 -- Copyright   : (c) Yale University, 2003
 --
 -- Author: Henrik Nilsson
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 module RenderObject (
     renderObjects       -- :: [ObjObjState] -> HGL.Graphic
 ) where
@@ -19,7 +19,7 @@ module RenderObject (
 import           Data.AffineSpace ((.+^), (.-^))
 import           Data.Array
 import           Data.Vector2     (vector2, vector2Polar)
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 import qualified Graphics.HGL     as HGL
 #else
 import WasmImports
@@ -39,7 +39,7 @@ import WorldGeometry
 -- This interface allows optimization. E.g. pen/brush creation can be
 -- lifted to the top level.
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 renderObjects :: [ObsObjState] -> HGL.Graphic
 renderObjects ooss = HGL.overGraphics (map renderObject ooss)
 #else
@@ -47,7 +47,7 @@ renderObjects :: [ObsObjState] -> IO ()
 renderObjects ooss = mapM_ renderObject ooss
 #endif
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 renderObject :: ObsObjState -> HGL.Graphic
 renderObject (OOSGun {oosPos = p, oosAmLvl = l}) =
     centeredText Green (p .-^ vector2 0 (gunHeight/2)) (show l)
@@ -89,7 +89,7 @@ renderObject (OOSAlien {oosPos = p, oosHdng = h}) = do
         v  = vector2Polar alienWingRadius (h + pi/2)
 #endif
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 line :: Color -> Position2 -> Position2 -> HGL.Graphic
 line c p1 p2 =
     -- Line style and thiknes seems to be ignored completely?
@@ -114,7 +114,7 @@ line c p1 p2 = do
         gp2 = position2ToGPoint p2
 #endif
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 triangle :: Color -> Position2 -> Position2 -> Position2 -> HGL.Graphic
 triangle c p1 p2 p3 =
     HGL.mkBrush (colorTable ! c) $ \brush ->
@@ -130,7 +130,7 @@ triangle c p1 p2 p3 =
     polygon c [p1, p2, p3]
 #endif
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 rectangle :: Color -> Position2 -> Position2 -> HGL.Graphic
 rectangle c p1 p2 =
     HGL.mkBrush (colorTable ! c) $ \brush ->
@@ -147,7 +147,7 @@ rectangle c p1 p2 =
     pure () --TODO
 #endif
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 circle :: Color -> Position2 -> Length -> HGL.Graphic
 circle c p r =
     HGL.mkBrush (colorTable ! c) $ \brush ->
@@ -170,7 +170,7 @@ circle c p diameter = do
         posY = (fromIntegral $ snd $ position2ToGPoint p)
 #endif
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 centeredText :: Color -> Position2 -> String -> HGL.Graphic
 centeredText c p s =
     HGL.withTextColor (colorTable ! c) $
@@ -185,7 +185,7 @@ centeredText c p s =
     pure ()
 #endif
 
-#if WASM_BUILD
+#if (WASM_BUILD || JS_BUILD)
 polygon :: Color -> [Position2] -> IO ()
 polygon c [] = do
     let (RGB r g b) = colorTable ! c

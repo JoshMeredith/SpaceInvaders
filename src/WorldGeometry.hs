@@ -9,10 +9,10 @@ module WorldGeometry where
 
 -- External imports
 import           Data.Point2  (Point2 (..))
-#if !WASM_BUILD
-import qualified Graphics.HGL as HGL (Point)
-#else
+#if WASM_BUILD || JS_BUILD
 import qualified HGLSubstitutes as HGL (Point)
+#else
+import qualified Graphics.HGL as HGL (Point)
 #endif
 -- Internal imports
 import PhysicalDimensions

@@ -9,10 +9,10 @@ module Colors (Color(..), RGB, colorTable) where
 
 -- External imports
 import Data.Array
-#if !WASM_BUILD
-import Graphics.HGL (RGB(..))
-#else 
+#if WASM_BUILD || JS_BUILD
 import HGLSubstitutes (RGB(..))
+#else 
+import Graphics.HGL (RGB(..))
 #endif
 
 ------------------------------------------------------------------------------

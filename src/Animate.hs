@@ -13,7 +13,7 @@ import           Control.Monad   (forM_, when)
 import           Data.IORef      (IORef, newIORef, readIORef, writeIORef)
 import           FRP.Yampa
 import           FRP.Yampa.Event
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 import qualified Graphics.HGL    as HGL
 #endif
 -- Internal imports
@@ -41,7 +41,7 @@ import PhysicalDimensions
 -- is the current method, although it seems as if this method means that
 -- window close events often will be missed.
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 type WinInput = Event HGL.Event
 #else
 data WinInput = WinInput {
@@ -69,7 +69,7 @@ data WinInput = WinInput {
 -- !!! function. Could one possibly somehow get data back into the signal
 -- !!! function by means of continuations? Or maybe the IOTask monad is the
 -- !!! way to go, with a special "reactimateIOTask".
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 animate :: (NFData a)
         => Frequency -> String -> Int -> Int
         -> (a -> HGL.Graphic)

@@ -12,7 +12,7 @@ module RenderLandscape (
 -- External imports
 import           Data.Array
 import           Data.Point2  (Point2 (..))
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 import qualified Graphics.HGL as HGL
 #else
 import qualified HGLSubstitutes as HGL
@@ -28,7 +28,7 @@ import WorldGeometry
 -- Landscape rendering
 ------------------------------------------------------------------------------
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 landscape :: HGL.Graphic
 landscape =
     HGL.mkBrush (colorTable ! distantMountainColor) $ \dmcBrush ->

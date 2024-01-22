@@ -32,7 +32,7 @@ import           Data.AffineSpace (origin, (.-.))
 import           Data.Char        (isDigit, isSpace, ord)
 import           Data.Maybe       (isJust, isNothing)
 import           FRP.Yampa
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 import qualified Graphics.HGL     as HGL (Event (..))
 #endif
 -- Internal imports
@@ -51,7 +51,7 @@ data GameInput = GameInput {
     giPDS    :: PDState
 }
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 parseWinInput :: SF WinInput GameInput
 parseWinInput = wiToCmd &&& wiToPDS
                 >>^ \((cmdStr, cmd), pds) ->
@@ -143,7 +143,7 @@ dragging = arr (giPDS >>> pdsDrag >>> isJust)
 
 -- Currently overkill, but being able to enter multi-character commands
 -- could possibly be useful.
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 wiToCmd :: SF WinInput (String, Event Command)
 wiToCmd = arr (mapFilterE selChar)
           >>> (accumBy scanChar (undefined,scanCmds) >>^ fmap fst >>^ splitE)
@@ -326,7 +326,7 @@ initPDS = PDState {
               pdsDrag         = Nothing
           }
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 wiToPDS :: SF WinInput PDState
 wiToPDS = accumHoldBy nextPDS initPDS
 

@@ -1,5 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE UnboxedTuples #-}
 -- |
 -- Module      : Main
 -- Description : Main module.
@@ -13,11 +15,16 @@ import           Data.Array
 import           Data.Maybe    (isJust)
 import           Data.Point2   (Point2 (..), point2Y)
 import           FRP.Yampa
-#if !WASM_BUILD
-import qualified Graphics.HGL  as HGL
-#else
+#if WASM_BUILD
 import GHC.IO ( unsafePerformIO )
 import WasmImports
+#elif JS_BUILD
+import GHC.JS.Prim
+import GHC.JS.Foreign.Callback
+import GHC.IO (unsafePerformIO)
+import WasmImports
+#else
+import qualified Graphics.HGL  as HGL
 #endif
 import           System.Random (mkStdGen)
 
@@ -63,6 +70,53 @@ runGameStep x y pressed deltaTime = do
 
 main :: IO ()
 main = return ()
+
+#elif JS_BUILD
+
+actuate :: ReactHandle WinInput (Score, [ObsObjState]) -> Bool -> (Score, [ObsObjState]) -> IO Bool
+actuate _ _ (score, ooss) = do
+    clearCanvas 0 0 0
+    renderScore score
+    landscape
+    renderObjects ooss
+    return (score /= 0)
+
+gameReactHandle :: ReactHandle WinInput (Score, [ObsObjState])
+{-# NOINLINE gameReactHandle #-}
+gameReactHandle = unsafePerformIO $ do
+    let g = mkStdGen 123
+    reactInit
+        (pure $ WinInput 0.0 0.0 False)
+        actuate
+        (parseWinInput >>> restartingGame g)
+
+runGameStep :: Double -> Double -> Bool -> Double -> IO ()
+runGameStep x y pressed deltaTime = do
+  _ <- react gameReactHandle (deltaTime, Just (WinInput x y pressed))
+  return ()
+
+foreign import javascript unsafe "run" run
+  :: IO ()
+
+foreign import javascript "unpackGameStepArgs" unpackGameStepArgs
+  :: JSVal -> (# Double, Double, Bool, Double #)
+
+foreign import javascript "setRunGameStep" setGameStep
+  :: Callback (JSVal -> IO ()) -> IO ()
+
+runGameStep' :: JSVal -> IO ()
+runGameStep' args =
+  let
+    (# x, y, pressed, deltaTime #) = unpackGameStepArgs args
+  in
+    runGameStep x y pressed deltaTime
+
+main :: IO ()
+main = do
+  rgs <- syncCallback1 ThrowWouldBlock runGameStep'
+  setGameStep rgs
+  run
+
 #else
 
 main :: IO ()
@@ -235,7 +289,7 @@ game g nAliens vydAlien score0 = proc gi -> do
                                      (ooSpawnReq oo))
                      | (k,oo) <- assocsIL oos ]
 
-#if !WASM_BUILD
+#if !(WASM_BUILD || JS_BUILD)
 renderScore :: Score -> HGL.Graphic
 renderScore score =
     HGL.withTextColor (colorTable ! White) $
